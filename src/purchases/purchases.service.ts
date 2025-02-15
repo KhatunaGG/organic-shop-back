@@ -36,7 +36,7 @@ export class PurchasesService {
         newPurchase,
       );
 
-      return newPurchase;
+      return updatedUsersPurchase;
     } catch (error) {
       console.log(error);
       throw new BadRequestException('Error creating purchase.');
@@ -48,12 +48,11 @@ export class PurchasesService {
       if (userId) {
         const purchases = await this.purchaseModel.find({ userId });
         if (purchases.length === 0) {
-          throw new NotFoundException('No purchases found for this user.');
+          return [];
         }
         return purchases;
-      } else {
-        return this.purchaseModel.find();
       }
+      return this.purchaseModel.find();
     } catch (error) {
       console.error(error);
       throw error;

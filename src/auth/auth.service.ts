@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  InternalServerErrorException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { CreateUserDto } from 'src/users/dto/create-user.dto';
@@ -28,6 +29,7 @@ export class AuthService {
   async signUp(createUserDto: CreateUserDto) {
     try {
       const { name, email, password, role } = createUserDto;
+      console.log(createUserDto, 'createUserDto');
 
       if (role === Role.ADMIN) {
         throw new UnauthorizedException(
@@ -38,6 +40,9 @@ export class AuthService {
       if (existingUser) {
         throw new BadRequestException('User already exists');
       }
+
+      console.log(email, 'email');
+      console.log(existingUser, 'existingUser');
 
       const hashedPassword = await bcrypt.hash(password, 10);
       const userRole = role ? role : Role.USER;
@@ -51,6 +56,11 @@ export class AuthService {
       return { success: true, message: 'User registered successfully' };
     } catch (error) {
       console.log(error);
+      if (error instanceof BadRequestException) {
+        throw error;
+      } else {
+        throw new InternalServerErrorException('Internal server error');
+      }
     }
   }
 
@@ -60,7 +70,6 @@ export class AuthService {
       email,
     });
 
-    
     if (!existingUser) {
       throw new BadRequestException('Invalid credentials');
     }
@@ -79,10 +88,6 @@ export class AuthService {
       accessToken: await this.jwtService.signAsync(payload),
     };
   }
-
-
-
-
 
   async getCurrentUser(req) {
     try {
